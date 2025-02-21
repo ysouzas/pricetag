@@ -82,7 +82,7 @@ export const ProductCreate = () => {
             width={500}
             height={500}
             onUpdate={(err, result) => {
-              if (result) handleCapture(result.text);
+              if (result) handleCapture(result.getText());
             }}
           />
         )}

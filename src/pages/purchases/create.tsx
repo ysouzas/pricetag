@@ -69,7 +69,7 @@ export const PurchaseCreate = () => {
           />
           {errors.store_id && (
             <Typography variant="caption" color="error">
-              {errors.store_id?.message}
+              {String(errors.store_id?.message)}
             </Typography>
           )}
         </FormControl>

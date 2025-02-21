@@ -1,27 +1,53 @@
-import { Box, TextField } from "@mui/material";
+import { useState } from "react";
+import { Box, TextField, Button } from "@mui/material";
 import { Create } from "@refinedev/mui";
 import { useForm } from "@refinedev/react-hook-form";
+import { BarcodeScanner } from "react-barcode-scanner";
 
 export const ProductCreate = () => {
   const {
     saveButtonProps,
     refineCore: { formLoading },
     register,
+    setValue,
     formState: { errors },
   } = useForm();
+
+  // Toggle scanner view
+  const [scanning, setScanning] = useState(false);
+  // For demonstration, assume the device supports torch
+  const [torchEnabled, setTorchEnabled] = useState(false);
+  const isSupportTorch = true;
+
+  const onTorchSwitch = () => {
+    setTorchEnabled((prev) => !prev);
+    // Integrate with your scanner's torch API if available
+  };
+
+  // onCapture receives an array of DetectedBarcode objects
+  const handleCapture = (barcodes: any[]) => {
+    if (barcodes.length > 0) {
+      // Assuming each DetectedBarcode has a 'text' property or a 'getText()' method.
+      const scannedBarcode =
+        typeof barcodes[0].getText === "function"
+          ? barcodes[0].getText()
+          : barcodes[0].text;
+      setValue("barcode", scannedBarcode, { shouldValidate: true });
+      setScanning(false);
+    }
+  };
 
   return (
     <Create isLoading={formLoading} saveButtonProps={saveButtonProps}>
       <Box
         component="form"
-        sx={{ display: "flex", flexDirection: "column" }}
+        sx={{ display: "flex", flexDirection: "column", gap: 2 }}
         autoComplete="off"
       >
         <TextField
           {...register("name", { required: "This field is required" })}
           error={!!errors.name}
           helperText={errors.name?.message ? String(errors.name?.message) : ""}
-          margin="normal"
           fullWidth
           slotProps={{ inputLabel: { shrink: true } }}
           label="Name"
@@ -33,7 +59,6 @@ export const ProductCreate = () => {
           helperText={
             errors.brand?.message ? String(errors.brand?.message) : ""
           }
-          margin="normal"
           fullWidth
           slotProps={{ inputLabel: { shrink: true } }}
           label="Brand"
@@ -47,7 +72,6 @@ export const ProductCreate = () => {
               ? String(errors.description?.message)
               : ""
           }
-          margin="normal"
           fullWidth
           slotProps={{ inputLabel: { shrink: true } }}
           label="Description"
@@ -59,19 +83,31 @@ export const ProductCreate = () => {
           helperText={
             errors.barcode?.message ? String(errors.barcode?.message) : ""
           }
-          margin="normal"
           fullWidth
           slotProps={{ inputLabel: { shrink: true } }}
           label="Barcode"
           name="barcode"
+          inputProps={{ readOnly: true }}
         />
+        <Button variant="contained" onClick={() => setScanning(true)}>
+          Scan Barcode
+        </Button>
+        {scanning && (
+          <div style={{ width: "100%", height: "360px" }}>
+            <BarcodeScanner onCapture={handleCapture} />
+            {isSupportTorch ? (
+              <Button onClick={onTorchSwitch} variant="outlined">
+                Switch Torch {torchEnabled ? "(On)" : "(Off)"}
+              </Button>
+            ) : null}
+          </div>
+        )}
         <TextField
           {...register("image_url")}
           error={!!errors.image_url}
           helperText={
             errors.image_url?.message ? String(errors.image_url?.message) : ""
           }
-          margin="normal"
           fullWidth
           slotProps={{ inputLabel: { shrink: true } }}
           label="Image URL"

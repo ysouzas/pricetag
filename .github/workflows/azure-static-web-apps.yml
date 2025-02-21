@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18.x"
+          node-version: "20.x"
 
       - name: Install Dependencies
         run: npm install
@@ -36,7 +36,5 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          # The app_location is the folder containing your project source.
           app_location: "/"
-          # Vite outputs the build to the "dist" folder by default.
           output_location: "dist"

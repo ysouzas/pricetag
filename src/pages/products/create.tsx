@@ -1,23 +1,29 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Box, TextField, Button } from "@mui/material";
 import { Create } from "@refinedev/mui";
 import { useForm } from "@refinedev/react-hook-form";
 import BarcodeScannerComponent from "react-qr-barcode-scanner";
 
-export const ProductCreate = () => {
+interface IProductForm {
+  name: string;
+  brand?: string;
+  description?: string;
+  barcode: string;
+  image_url?: string;
+}
+
+export const ProductCreate: React.FC = () => {
   const {
     saveButtonProps,
     refineCore: { formLoading },
     register,
     setValue,
     formState: { errors },
-  } = useForm();
+  } = useForm<IProductForm>();
 
-  // Toggle scanner view
-  const [scanning, setScanning] = useState(false);
+  const [scanning, setScanning] = useState<boolean>(false);
 
-  // onCapture receives an array of DetectedBarcode objects
-  const handleCapture = (barcode: string) => {
+  const handleCapture = (barcode: string): void => {
     setValue("barcode", barcode, { shouldValidate: true });
     setScanning(false);
   };
@@ -31,8 +37,8 @@ export const ProductCreate = () => {
       >
         <TextField
           {...register("name", { required: "This field is required" })}
-          error={!!errors.name}
-          helperText={errors.name?.message ? String(errors.name?.message) : ""}
+          error={Boolean(errors.name)}
+          helperText={errors.name?.message ? String(errors.name.message) : ""}
           fullWidth
           slotProps={{ inputLabel: { shrink: true } }}
           label="Name"
@@ -40,10 +46,8 @@ export const ProductCreate = () => {
         />
         <TextField
           {...register("brand")}
-          error={!!errors.brand}
-          helperText={
-            errors.brand?.message ? String(errors.brand?.message) : ""
-          }
+          error={Boolean(errors.brand)}
+          helperText={errors.brand?.message ? String(errors.brand.message) : ""}
           fullWidth
           slotProps={{ inputLabel: { shrink: true } }}
           label="Brand"
@@ -51,10 +55,10 @@ export const ProductCreate = () => {
         />
         <TextField
           {...register("description")}
-          error={!!errors.description}
+          error={Boolean(errors.description)}
           helperText={
             errors.description?.message
-              ? String(errors.description?.message)
+              ? String(errors.description.message)
               : ""
           }
           fullWidth
@@ -64,33 +68,34 @@ export const ProductCreate = () => {
         />
         <TextField
           {...register("barcode")}
-          error={!!errors.barcode}
+          error={Boolean(errors.barcode)}
           helperText={
-            errors.barcode?.message ? String(errors.barcode?.message) : ""
+            errors.barcode?.message ? String(errors.barcode.message) : ""
           }
           fullWidth
           slotProps={{ inputLabel: { shrink: true } }}
           label="Barcode"
           name="barcode"
-          inputProps={{ readOnly: true }}
         />
         <Button variant="contained" onClick={() => setScanning(true)}>
           Scan Barcode
         </Button>
         {scanning && (
-          <BarcodeScannerComponent
-            width={500}
-            height={500}
-            onUpdate={(err, result) => {
-              if (result) handleCapture(result.getText());
-            }}
-          />
+          <div style={{ width: "100%", height: "360px" }}>
+            <BarcodeScannerComponent
+              width={500}
+              height={500}
+              onUpdate={(err, result) => {
+                if (result) handleCapture(result.getText());
+              }}
+            />
+          </div>
         )}
         <TextField
           {...register("image_url")}
-          error={!!errors.image_url}
+          error={Boolean(errors.image_url)}
           helperText={
-            errors.image_url?.message ? String(errors.image_url?.message) : ""
+            errors.image_url?.message ? String(errors.image_url.message) : ""
           }
           fullWidth
           slotProps={{ inputLabel: { shrink: true } }}

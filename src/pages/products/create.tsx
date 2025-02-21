@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Box, TextField, Button } from "@mui/material";
 import { Create } from "@refinedev/mui";
 import { useForm } from "@refinedev/react-hook-form";
-import { BarcodeScanner } from "react-barcode-scanner";
+import BarcodeScannerComponent from "react-qr-barcode-scanner";
 
 export const ProductCreate = () => {
   const {
@@ -15,26 +15,11 @@ export const ProductCreate = () => {
 
   // Toggle scanner view
   const [scanning, setScanning] = useState(false);
-  // For demonstration, assume the device supports torch
-  const [torchEnabled, setTorchEnabled] = useState(false);
-  const isSupportTorch = true;
-
-  const onTorchSwitch = () => {
-    setTorchEnabled((prev) => !prev);
-    // Integrate with your scanner's torch API if available
-  };
 
   // onCapture receives an array of DetectedBarcode objects
-  const handleCapture = (barcodes: any[]) => {
-    if (barcodes.length > 0) {
-      // Assuming each DetectedBarcode has a 'text' property or a 'getText()' method.
-      const scannedBarcode =
-        typeof barcodes[0].getText === "function"
-          ? barcodes[0].getText()
-          : barcodes[0].text;
-      setValue("barcode", scannedBarcode, { shouldValidate: true });
-      setScanning(false);
-    }
+  const handleCapture = (barcode: string) => {
+    setValue("barcode", barcode, { shouldValidate: true });
+    setScanning(false);
   };
 
   return (
@@ -93,14 +78,13 @@ export const ProductCreate = () => {
           Scan Barcode
         </Button>
         {scanning && (
-          <div style={{ width: "100%", height: "360px" }}>
-            <BarcodeScanner onCapture={handleCapture} />
-            {isSupportTorch ? (
-              <Button onClick={onTorchSwitch} variant="outlined">
-                Switch Torch {torchEnabled ? "(On)" : "(Off)"}
-              </Button>
-            ) : null}
-          </div>
+          <BarcodeScannerComponent
+            width={500}
+            height={500}
+            onUpdate={(err, result) => {
+              if (result) handleCapture(result.text);
+            }}
+          />
         )}
         <TextField
           {...register("image_url")}

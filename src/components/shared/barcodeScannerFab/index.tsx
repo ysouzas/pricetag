@@ -15,10 +15,9 @@ export const BarcodeScannerFab: React.FC<BarcodeScannerFabProps> = ({
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  const handleUpdate = (err: unknown, result?: { getText: () => string }) => {
-    if (result) {
-      alert(result);
-      onCapture(result.getText());
+  const handleUpdate = (barcode: string) => {
+    if (barcode) {
+      onCapture(barcode);
       handleClose();
     }
   };

@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { Box, TextField, Button } from "@mui/material";
+import React, { useState, useEffect, useCallback } from "react";
+import { Box, TextField } from "@mui/material";
 import { Create } from "@refinedev/mui";
 import { useForm } from "@refinedev/react-hook-form";
-import BarcodeScannerComponent from "react-qr-barcode-scanner";
 import { BarcodeScannerFab } from "../../components/shared/barcodeScannerFab";
 
 interface IProductForm {
@@ -13,6 +12,13 @@ interface IProductForm {
   image_url?: string;
 }
 
+const commonSlotProps = { inputLabel: { shrink: true } };
+
+const getHelperText = (error: unknown): string =>
+  typeof (error as { message?: string })?.message === "string"
+    ? (error as { message: string }).message
+    : "";
+
 export const ProductCreate: React.FC = () => {
   const {
     saveButtonProps,
@@ -22,40 +28,68 @@ export const ProductCreate: React.FC = () => {
     formState: { errors },
   } = useForm<IProductForm>();
 
-  // State to control the scanner and store scanned barcode.
-  const [scanning, setScanning] = useState<boolean>(false);
+  // State to store the scanned barcode.
   const [scannedBarcode, setScannedBarcode] = useState<string>("");
 
-  const handleCapture = (barcode: string): void => {
-    setValue("barcode", barcode, { shouldValidate: true });
-    setScannedBarcode(barcode);
-    setScanning(false);
-  };
+  // Callback when a barcode is captured.
+  const handleCapture = useCallback(
+    (barcode: string): void => {
+      setScannedBarcode(barcode);
+      setValue("barcode", barcode, { shouldValidate: true });
+    },
+    [setValue]
+  );
 
-  // When scannedBarcode changes, fetch product details from Open Food Facts.
+  // Fetch product details from the external API when a barcode is captured.
   useEffect(() => {
-    if (scannedBarcode) {
-      fetch(
-        `https://pt.openfoodfacts.org/api/v0/product/${scannedBarcode}.json`
-      )
-        .then((res) => res.json())
-        .then((json) => {
-          if (
-            json.status === 1 &&
-            json.product &&
-            json.product.image_front_url
-          ) {
+    if (!scannedBarcode) return;
+
+    const apiUrl = `https://pt.openfoodfacts.org/api/v0/product/${scannedBarcode}.json`;
+
+    fetch(apiUrl)
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.status === 1 && json.product) {
+          if (json.product.image_front_url) {
             setValue("image_url", json.product.image_front_url, {
               shouldValidate: true,
             });
           } else {
-            console.error("Product not found or no image available", json);
+            console.error("No image available", json);
           }
-        })
-        .catch((error) => {
-          console.error("Error fetching product details:", error);
-        });
-    }
+
+          if (json.product.brands) {
+            setValue("brand", json.product.brands, { shouldValidate: true });
+          } else {
+            console.error("No brand available", json);
+          }
+
+          if (json.product.product_name_pt || json.product.product_name) {
+            setValue(
+              "name",
+              json.product.product_name_pt || json.product.product_name,
+              { shouldValidate: true }
+            );
+          } else {
+            console.error("No product name available", json);
+          }
+
+          if (json.product.generic_name_pt || json.product.generic_name) {
+            setValue(
+              "description",
+              json.product.generic_name_pt || json.product.generic_name,
+              { shouldValidate: true }
+            );
+          } else {
+            console.error("No product name available", json);
+          }
+        } else {
+          console.error("Product not found", json);
+        }
+      })
+      .catch((error) =>
+        console.error("Error fetching product details:", error)
+      );
   }, [scannedBarcode, setValue]);
 
   return (
@@ -69,11 +103,9 @@ export const ProductCreate: React.FC = () => {
         <TextField
           {...register("name", { required: "This field is required" })}
           error={Boolean(errors.name)}
-          helperText={
-            typeof errors.name?.message === "string" ? errors.name.message : ""
-          }
+          helperText={getHelperText(errors.name)}
           fullWidth
-          slotProps={{ inputLabel: { shrink: true } }}
+          slotProps={commonSlotProps}
           label="Name"
           name="name"
         />
@@ -82,13 +114,9 @@ export const ProductCreate: React.FC = () => {
         <TextField
           {...register("brand")}
           error={Boolean(errors.brand)}
-          helperText={
-            typeof errors.brand?.message === "string"
-              ? errors.brand.message
-              : ""
-          }
+          helperText={getHelperText(errors.brand)}
           fullWidth
-          slotProps={{ inputLabel: { shrink: true } }}
+          slotProps={commonSlotProps}
           label="Brand"
           name="brand"
         />
@@ -97,13 +125,9 @@ export const ProductCreate: React.FC = () => {
         <TextField
           {...register("description")}
           error={Boolean(errors.description)}
-          helperText={
-            typeof errors.description?.message === "string"
-              ? errors.description.message
-              : ""
-          }
+          helperText={getHelperText(errors.description)}
           fullWidth
-          slotProps={{ inputLabel: { shrink: true } }}
+          slotProps={commonSlotProps}
           label="Description"
           name="description"
         />
@@ -112,34 +136,28 @@ export const ProductCreate: React.FC = () => {
         <TextField
           {...register("barcode", { required: "Barcode is required" })}
           error={Boolean(errors.barcode)}
-          helperText={
-            typeof errors.barcode?.message === "string"
-              ? errors.barcode.message
-              : ""
-          }
+          helperText={getHelperText(errors.barcode)}
           fullWidth
-          slotProps={{ inputLabel: { shrink: true } }}
+          slotProps={commonSlotProps}
           label="Barcode"
           name="barcode"
+          inputProps={{ readOnly: true }}
         />
 
         {/* Image URL Field */}
         <TextField
           {...register("image_url")}
           error={Boolean(errors.image_url)}
-          helperText={
-            typeof errors.image_url?.message === "string"
-              ? errors.image_url.message
-              : ""
-          }
+          helperText={getHelperText(errors.image_url)}
           fullWidth
-          slotProps={{ inputLabel: { shrink: true } }}
+          slotProps={commonSlotProps}
           label="Image URL"
           name="image_url"
         />
-
-        <BarcodeScannerFab onCapture={handleCapture} />
       </Box>
+
+      {/* Reusable Barcode Scanner FAB */}
+      <BarcodeScannerFab onCapture={handleCapture} />
     </Create>
   );
 };

@@ -100,7 +100,6 @@ export const PurchaseCreate: React.FC = () => {
   // Handler for the barcode scanner.
   const handleCapture = (barcode: string): void => {
     setScannedBarcode(barcode);
-    setValue("barcode", barcode, { shouldValidate: true });
   };
 
   return (

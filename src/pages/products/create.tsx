@@ -40,6 +40,16 @@ export const ProductCreate: React.FC = () => {
     [setValue]
   );
 
+  const updateValue = (predicate: any, value: any) => {
+    if (predicate) {
+      setValue(value, predicate, {
+        shouldValidate: true,
+      });
+    } else {
+      console.error(`No ${value} available`);
+    }
+  };
+
   // Fetch product details from the external API when a barcode is captured.
   useEffect(() => {
     if (!scannedBarcode) return;
@@ -50,29 +60,13 @@ export const ProductCreate: React.FC = () => {
       .then((res) => res.json())
       .then((json) => {
         if (json.status === 1 && json.product) {
-          if (json.product.image_front_url) {
-            setValue("image_url", json.product.image_front_url, {
-              shouldValidate: true,
-            });
-          } else {
-            console.error("No image available", json);
-          }
-
-          if (json.product.brands) {
-            setValue("brand", json.product.brands, { shouldValidate: true });
-          } else {
-            console.error("No brand available", json);
-          }
-
-          if (json.product.product_name_pt || json.product.product_name) {
-            setValue(
-              "name",
-              json.product.product_name_pt || json.product.product_name,
-              { shouldValidate: true }
-            );
-          } else {
-            console.error("No product name available", json);
-          }
+          updateValue(json.product.image_front_url, "image_url");
+          updateValue(json.product.brands, "brand");
+          updateValue(
+            json.product.product_name_pt || json.product.product_name,
+            "name"
+          );
+          updateValue(json.product.image_front_url, "image_url");
 
           if (json.product.generic_name_pt || json.product.generic_name) {
             setValue(
@@ -81,6 +75,13 @@ export const ProductCreate: React.FC = () => {
               { shouldValidate: true }
             );
           } else {
+            if (json.product.categories || json.product.categories_old) {
+              setValue(
+                "description",
+                json.product.categories || json.product.categories_old,
+                { shouldValidate: true }
+              );
+            }
             console.error("No product name available", json);
           }
         } else {

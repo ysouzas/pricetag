@@ -36,6 +36,7 @@ export const BarcodeScannerDialog: React.FC<BarcodeScannerDialogProps> = ({
             width={scannerWidth}
             height={scannerHeight}
             onUpdate={(err: unknown, result?: { getText: () => string }) => {
+              alert(result);
               if (result) onCapture(result.getText());
             }}
           />

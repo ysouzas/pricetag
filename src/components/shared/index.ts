@@ -1,0 +1,1 @@
+export { BarcodeScannerDialog } from "./barcodeScannerDialog";

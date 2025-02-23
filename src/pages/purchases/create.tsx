@@ -10,16 +10,13 @@ import {
   Checkbox,
   Typography,
   Fab,
-  Dialog,
-  DialogTitle,
-  DialogContent,
 } from "@mui/material";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import { Create } from "@refinedev/mui";
 import { useForm } from "@refinedev/react-hook-form";
-import { useSelect, useList, useNavigation, HttpError } from "@refinedev/core";
+import { useSelect, useList, HttpError } from "@refinedev/core";
 import { Controller } from "react-hook-form";
-import BarcodeScannerComponent from "react-qr-barcode-scanner";
+import { BarcodeScannerFab } from "../../components/shared/barcodeScannerFab";
 
 // Define an interface for your product data
 interface IProduct {
@@ -60,10 +57,7 @@ export const PurchaseCreate: React.FC = () => {
   const [scannedBarcode, setScannedBarcode] = useState<string>("");
 
   // Use useList to look up product by barcode.
-  const { data: productListData, isLoading: productListLoading } = useList<
-    IProduct,
-    HttpError
-  >({
+  const { data: productListData } = useList<IProduct, HttpError>({
     resource: "products",
     filters: scannedBarcode
       ? [
@@ -79,8 +73,6 @@ export const PurchaseCreate: React.FC = () => {
     },
   });
 
-  const { push } = useNavigation();
-
   // When a barcode is scanned and a product is found, set the product_id.
   useEffect(() => {
     if (scannedBarcode && productListData?.data) {
@@ -89,13 +81,7 @@ export const PurchaseCreate: React.FC = () => {
         setValue("product_id", productId, { shouldValidate: true });
         // Optionally, close the scanner dialog if still open.
         setScanning(false);
-      } else if (productListData.data.length === 0) {
-        alert(`No product found with barcode: ${scannedBarcode}`);
-      } else {
-        alert(`Multiple products found with barcode: ${scannedBarcode}`);
       }
-      // Reset the scanned barcode after handling.
-      setScannedBarcode("");
     }
   }, [scannedBarcode, productListData, setValue]);
 
@@ -124,16 +110,6 @@ export const PurchaseCreate: React.FC = () => {
           slotProps={{ inputLabel: { shrink: true } }}
           inputProps={{ readOnly: true }}
         />
-
-        {/* Button to trigger barcode scanner */}
-        <Fab
-          color="primary"
-          aria-label="scan"
-          onClick={() => setScanning(true)}
-          style={{ alignSelf: "flex-end", marginBottom: 16 }}
-        >
-          <CameraAltIcon />
-        </Fab>
 
         {/* Store Dropdown */}
         <FormControl fullWidth margin="normal" error={!!errors.store_id}>
@@ -205,26 +181,7 @@ export const PurchaseCreate: React.FC = () => {
         />
       </Box>
 
-      {/* Barcode Scanner Dialog */}
-      <Dialog
-        open={scanning}
-        onClose={() => setScanning(false)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>Scan Product Barcode</DialogTitle>
-        <DialogContent>
-          <div style={{ width: "100%", height: "360px" }}>
-            <BarcodeScannerComponent
-              width={500}
-              height={500}
-              onUpdate={(err, result) => {
-                if (result) handleCapture(result.getText());
-              }}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+      <BarcodeScannerFab onCapture={handleCapture} />
     </Create>
   );
 };

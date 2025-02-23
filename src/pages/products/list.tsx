@@ -7,17 +7,9 @@ import {
   ShowButton,
   useDataGrid,
 } from "@refinedev/mui";
-import {
-  Fab,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  useTheme,
-  useMediaQuery,
-} from "@mui/material";
-import CameraAltIcon from "@mui/icons-material/CameraAlt";
-import BarcodeScannerComponent from "react-qr-barcode-scanner";
+import { useTheme, useMediaQuery } from "@mui/material";
 import { useList, useNavigation, HttpError } from "@refinedev/core";
+import { BarcodeScannerFab } from "../../components/shared/barcodeScannerFab";
 
 // Define an interface for your product data.
 interface IProduct {
@@ -34,13 +26,6 @@ export const ProductList: React.FC = () => {
   // State for controlling the barcode scanner dialog and storing the scanned barcode.
   const [scanning, setScanning] = useState<boolean>(false);
   const [scannedBarcode, setScannedBarcode] = useState<string>("");
-
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-  const scannerWidth = isMobile ? 300 : 500;
-  const scannerHeight = isMobile ? 300 : 500;
-  const containerHeight = isMobile ? "300px" : "360px";
 
   // Use useList to query products by barcode when one is scanned.
   const { data: productsData, isLoading: listLoading } = useList<
@@ -129,38 +114,7 @@ export const ProductList: React.FC = () => {
         />
       </List>
 
-      {/* Floating Action Button to trigger barcode scanning */}
-      <Fab
-        color="primary"
-        aria-label="scan"
-        onClick={() => setScanning(true)}
-        style={{ position: "fixed", bottom: 16, right: 16 }}
-      >
-        <CameraAltIcon />
-      </Fab>
-
-      {/* Dialog containing the barcode scanner */}
-      <Dialog
-        open={scanning}
-        onClose={() => {
-          setScanning(false);
-        }}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>Scan Barcode</DialogTitle>
-        <DialogContent>
-          <div style={{ width: "100%", height: containerHeight }}>
-            <BarcodeScannerComponent
-              width={scannerWidth}
-              height={scannerHeight}
-              onUpdate={(err, result) => {
-                if (result) handleCapture(result.getText());
-              }}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+      <BarcodeScannerFab onCapture={handleCapture} />
     </>
   );
 };

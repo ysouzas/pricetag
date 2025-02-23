@@ -9,16 +9,13 @@ import {
   FormControlLabel,
   Checkbox,
   Typography,
-  Fab,
 } from "@mui/material";
-import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import { Create } from "@refinedev/mui";
 import { useForm } from "@refinedev/react-hook-form";
 import { useSelect, useList, HttpError } from "@refinedev/core";
 import { Controller } from "react-hook-form";
 import { BarcodeScannerFab } from "../../components/shared/barcodeScannerFab";
 
-// Define an interface for your product data
 interface IProduct {
   id: string;
   name: string;
@@ -26,7 +23,6 @@ interface IProduct {
   // add additional fields as needed
 }
 
-// Define an interface for the purchase form data.
 interface IPurchaseForm {
   product_id: string;
   store_id: string;
@@ -36,6 +32,14 @@ interface IPurchaseForm {
 }
 
 export const PurchaseCreate: React.FC = () => {
+  function getDatetimeLocal() {
+    const now = new Date();
+    now.setSeconds(0, 0); // remove seconds and milliseconds
+    const offset = now.getTimezoneOffset();
+    const localDate = new Date(now.getTime() - offset * 60 * 1000);
+    return localDate.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:MM"
+  }
+
   const {
     saveButtonProps,
     refineCore: { formLoading },
@@ -43,7 +47,11 @@ export const PurchaseCreate: React.FC = () => {
     control,
     setValue,
     formState: { errors },
-  } = useForm<IPurchaseForm>();
+  } = useForm<IPurchaseForm>({
+    defaultValues: {
+      purchase_date: getDatetimeLocal(), // This will set the default value properly.
+    },
+  });
 
   // Fetch available stores for the dropdown.
   const { options: storeOptions } = useSelect({
@@ -52,8 +60,7 @@ export const PurchaseCreate: React.FC = () => {
     optionValue: "id",
   });
 
-  // State to control barcode scanner dialog and store scanned barcode text.
-  const [scanning, setScanning] = useState<boolean>(false);
+  // State to store the scanned barcode.
   const [scannedBarcode, setScannedBarcode] = useState<string>("");
 
   // Use useList to look up product by barcode.
@@ -79,15 +86,21 @@ export const PurchaseCreate: React.FC = () => {
       if (productListData.data.length === 1) {
         const productId = productListData.data[0].id;
         setValue("product_id", productId, { shouldValidate: true });
-        // Optionally, close the scanner dialog if still open.
-        setScanning(false);
+        // Optionally, you can clear the scanned barcode state and close any scanner dialog.
+      } else if (productListData.data.length === 0) {
+        alert(`No product found with barcode: ${scannedBarcode}`);
+      } else {
+        alert(`Multiple products found with barcode: ${scannedBarcode}`);
       }
+      // Reset the scanned barcode after handling.
+      setScannedBarcode("");
     }
   }, [scannedBarcode, productListData, setValue]);
 
   // Handler for the barcode scanner.
   const handleCapture = (barcode: string): void => {
     setScannedBarcode(barcode);
+    setValue("barcode", barcode, { shouldValidate: true });
   };
 
   return (
@@ -97,18 +110,19 @@ export const PurchaseCreate: React.FC = () => {
         sx={{ display: "flex", flexDirection: "column", gap: 2 }}
         autoComplete="off"
       >
-        {/* Product ID Field */}
+        {/* Product ID Field (read-only) */}
         <TextField
           {...register("product_id", { required: "Product ID is required" })}
           error={!!errors.product_id}
           helperText={
-            errors.product_id?.message ? String(errors.product_id.message) : ""
+            typeof errors.product_id?.message === "string"
+              ? errors.product_id.message
+              : ""
           }
           label="Product ID"
           name="product_id"
           fullWidth
           slotProps={{ inputLabel: { shrink: true } }}
-          inputProps={{ readOnly: true }}
         />
 
         {/* Store Dropdown */}
@@ -130,7 +144,9 @@ export const PurchaseCreate: React.FC = () => {
           />
           {errors.store_id && (
             <Typography variant="caption" color="error">
-              {String(errors.store_id?.message)}
+              {typeof errors.store_id?.message === "string"
+                ? errors.store_id.message
+                : ""}
             </Typography>
           )}
         </FormControl>
@@ -140,7 +156,9 @@ export const PurchaseCreate: React.FC = () => {
           {...register("price", { required: "Price is required" })}
           error={!!errors.price}
           helperText={
-            errors.price?.message ? String(errors.price?.message) : ""
+            typeof errors.price?.message === "string"
+              ? errors.price.message
+              : ""
           }
           label="Price"
           name="price"
@@ -156,8 +174,8 @@ export const PurchaseCreate: React.FC = () => {
           })}
           error={!!errors.purchase_date}
           helperText={
-            errors.purchase_date?.message
-              ? String(errors.purchase_date?.message)
+            typeof errors.purchase_date?.message === "string"
+              ? errors.purchase_date.message
               : ""
           }
           label="Purchase Date"
@@ -167,7 +185,7 @@ export const PurchaseCreate: React.FC = () => {
           slotProps={{ inputLabel: { shrink: true } }}
         />
 
-        {/* Is Promotion */}
+        {/* Is Promotion Field */}
         <Controller
           name="is_promotion"
           control={control}
@@ -179,9 +197,10 @@ export const PurchaseCreate: React.FC = () => {
             />
           )}
         />
-      </Box>
 
-      <BarcodeScannerFab onCapture={handleCapture} />
+        {/* Reusable Barcode Scanner FAB */}
+        <BarcodeScannerFab onCapture={handleCapture} />
+      </Box>
     </Create>
   );
 };

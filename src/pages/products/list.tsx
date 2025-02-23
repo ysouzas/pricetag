@@ -7,7 +7,14 @@ import {
   ShowButton,
   useDataGrid,
 } from "@refinedev/mui";
-import { Fab, Dialog, DialogTitle, DialogContent } from "@mui/material";
+import {
+  Fab,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  useTheme,
+  useMediaQuery,
+} from "@mui/material";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import BarcodeScannerComponent from "react-qr-barcode-scanner";
 import { useList, useNavigation, HttpError } from "@refinedev/core";
@@ -27,6 +34,13 @@ export const ProductList: React.FC = () => {
   // State for controlling the barcode scanner dialog and storing the scanned barcode.
   const [scanning, setScanning] = useState<boolean>(false);
   const [scannedBarcode, setScannedBarcode] = useState<string>("");
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const scannerWidth = isMobile ? 300 : 500;
+  const scannerHeight = isMobile ? 300 : 500;
+  const containerHeight = isMobile ? "300px" : "360px";
 
   // Use useList to query products by barcode when one is scanned.
   const { data: productsData, isLoading: listLoading } = useList<
@@ -136,10 +150,10 @@ export const ProductList: React.FC = () => {
       >
         <DialogTitle>Scan Barcode</DialogTitle>
         <DialogContent>
-          <div style={{ width: "100%", height: "360px" }}>
+          <div style={{ width: "100%", height: containerHeight }}>
             <BarcodeScannerComponent
-              width={500}
-              height={500}
+              width={scannerWidth}
+              height={scannerHeight}
               onUpdate={(err, result) => {
                 if (result) handleCapture(result.getText());
               }}

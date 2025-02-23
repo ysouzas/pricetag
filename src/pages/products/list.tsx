@@ -7,7 +7,6 @@ import {
   ShowButton,
   useDataGrid,
 } from "@refinedev/mui";
-import { useTheme, useMediaQuery } from "@mui/material";
 import { useList, useNavigation, HttpError } from "@refinedev/core";
 import { BarcodeScannerFab } from "../../components/shared/barcodeScannerFab";
 

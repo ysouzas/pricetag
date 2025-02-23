@@ -142,7 +142,9 @@ export const ProductCreate: React.FC = () => {
           slotProps={commonSlotProps}
           label="Barcode"
           name="barcode"
-          inputProps={{ readOnly: true }}
+          onChange={(e) => {
+            setScannedBarcode(e.target.value); // update local state
+          }}
         />
 
         {/* Image URL Field */}
